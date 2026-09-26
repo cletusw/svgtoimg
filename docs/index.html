@@ -4,8 +4,7 @@
   <script type="importmap">
     {
       "imports": {
-        "pdfjs": "https://unpkg.com/pdfjs-dist@6.3.289/build/pdf.mjs",
-        "pdfjs/worker": "https://unpkg.com/pdfjs-dist@6.3.289/build/pdf.worker.mjs"
+        "jszip": "https://esm.sh/jszip@3.10.1"
       }
     }
   </script>
@@ -14,16 +13,35 @@
     body {
       background: #e7e7e7;
     }
+
+    #results {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    #results li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      max-width: 36rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #bbb;
+    }
+
+    .error {
+      color: #a00;
+    }
   </style>
 </head>
 <body>
   <label>
-    Upload PDF to convert to PNG
-    <input type="file" accept="image/svg+xml">
+    Select SVG files to convert to PNG
+    <input id="file-input" type="file" accept="image/svg+xml,.svg" multiple>
   </label>
   <br>
-  <button id="download-png">Download PNG</button>
-  <br>
-  <canvas id="the-canvas" style="border: 1px solid black; direction: ltr"></canvas>
+  <button id="download-all" type="button" disabled>Download all (ZIP)</button>
+  <p id="status" role="status" aria-live="polite"></p>
+  <ul id="results"></ul>
 </body>
 </html>
