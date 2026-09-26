@@ -14,6 +14,18 @@
       background: #e7e7e7;
     }
 
+    #drop-zone {
+      max-width: 36rem;
+      margin: 1rem 0;
+      padding: 1rem;
+      border: 2px dashed #777;
+    }
+
+    #drop-zone.is-dragging {
+      border-color: #165d8f;
+      background: #f5fbff;
+    }
+
     #results {
       padding-left: 0;
       list-style: none;
@@ -35,13 +47,15 @@
   </style>
 </head>
 <body>
-  <label>
-    Select SVG files to convert to PNG
-    <input id="file-input" type="file" accept="image/svg+xml,.svg" multiple>
-  </label>
+  <div id="drop-zone">
+    <p>Drop SVG files here, or select them:</p>
+    <button id="browse-files" type="button">Browse files</button>
+    <input id="file-input" type="file" accept="image/svg+xml,.svg" multiple hidden>
+  </div>
   <br>
   <button id="download-all" type="button" disabled>Download all (ZIP)</button>
   <p id="status" role="status" aria-live="polite"></p>
+  <p>Files in this batch:</p>
   <ul id="results"></ul>
 </body>
 </html>

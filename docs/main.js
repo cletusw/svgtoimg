@@ -2,10 +2,15 @@
 import JSZip from 'jszip';
 
 const fileInput = document.querySelector('#file-input');
+const browseButton = document.querySelector('#browse-files');
+const dropZone = document.querySelector('#drop-zone');
 const results = document.querySelector('#results');
 const status = document.querySelector('#status');
 const downloadAllButton = document.querySelector('#download-all');
 let convertedFiles = [];
+let isProcessing = false;
+
+browseButton.addEventListener('click', () => fileInput.click());
 
 downloadAllButton.addEventListener('click', async () => {
   if (!convertedFiles.length) return;
@@ -25,37 +30,71 @@ downloadAllButton.addEventListener('click', async () => {
   }
 });
 
-fileInput.addEventListener('change', async () => {
-  const files = Array.from(fileInput.files);
+fileInput.addEventListener('change', () => {
+  processFiles(Array.from(fileInput.files));
+});
+
+dropZone.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'copy';
+  dropZone.classList.add('is-dragging');
+});
+
+dropZone.addEventListener('dragleave', (event) => {
+  if (!dropZone.contains(event.relatedTarget)) {
+    dropZone.classList.remove('is-dragging');
+  }
+});
+
+dropZone.addEventListener('drop', (event) => {
+  event.preventDefault();
+  dropZone.classList.remove('is-dragging');
+  processFiles(Array.from(event.dataTransfer.files));
+});
+
+async function processFiles(files) {
+  if (isProcessing || !files.length) return;
+
+  isProcessing = true;
+  browseButton.disabled = true;
   convertedFiles = [];
   downloadAllButton.disabled = true;
   results.replaceChildren();
-  status.textContent = files.length ? `Converting ${files.length} file(s)...` : '';
+  status.textContent = `Converting ${files.length} file(s)...`;
 
-  let converted = 0;
-  for (const [index, file] of files.entries()) {
+  const items = files.map((file) => {
     const item = document.createElement('li');
     const name = document.createElement('span');
     name.textContent = file.name;
     item.append(name);
     results.append(item);
+    return { item, name };
+  });
 
-    try {
-      const blob = await convertSvgToPng(file);
-      const baseName = file.name.replace(/\.svg$/i, '') || 'image';
-      const filename = `${String(index + 1).padStart(3, '0')}-${baseName}.png`;
-      convertedFiles.push({ filename, blob });
-      converted++;
-    } catch (error) {
-      item.classList.add('error');
-      name.textContent = `${file.name}: ${error.message}`;
+  let converted = 0;
+  try {
+    for (const [index, file] of files.entries()) {
+      const { item, name } = items[index];
+
+      try {
+        const blob = await convertSvgToPng(file);
+        const baseName = file.name.replace(/\.svg$/i, '') || 'image';
+        const filename = `${String(index + 1).padStart(3, '0')}-${baseName}.png`;
+        convertedFiles.push({ filename, blob });
+        converted++;
+      } catch (error) {
+        item.classList.add('error');
+        name.textContent = `${file.name}: ${error.message}`;
+      }
     }
+  } finally {
+    status.textContent = `Converted ${converted} of ${files.length} file(s).`;
+    downloadAllButton.disabled = convertedFiles.length === 0;
+    fileInput.value = '';
+    browseButton.disabled = false;
+    isProcessing = false;
   }
-
-  status.textContent = `Converted ${converted} of ${files.length} file(s).`;
-  downloadAllButton.disabled = convertedFiles.length === 0;
-  fileInput.value = '';
-});
+}
 
 async function convertSvgToPng(file) {
   const url = URL.createObjectURL(file);
