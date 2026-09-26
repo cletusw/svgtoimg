@@ -1,11 +1,8 @@
-import {getDocument, GlobalWorkerOptions} from 'pdfjs';
-
-GlobalWorkerOptions.workerSrc = import.meta.resolve('pdfjs/worker');
 
 document.querySelector('input').addEventListener('change', async (event) => {
-  const buffer = await event.target.files[0].arrayBuffer();
+  const file = await event.target.files[0];
   const canvas = document.getElementById("the-canvas");
-  await renderBufferToCanvas(buffer, canvas);
+  await renderFileToCanvas(file, canvas);
 });
 
 document.querySelector('#download-png').addEventListener('click', async () => {
@@ -13,35 +10,33 @@ document.querySelector('#download-png').addEventListener('click', async () => {
   await downloadPNG(canvas);
 });
 
-async function renderBufferToCanvas(buffer, canvas) {
-  const pdf = await getDocument({data: buffer}).promise;
-  const page = await pdf.getPage(1);
-  const base = page.getViewport({ scale: 1 });
-  const scale = Math.min(3840 / base.width, 2160 / base.height);
-  const viewport = page.getViewport({ scale });
-  const outputScale = 1;
-
-  //
-  // Prepare canvas using PDF page dimensions
-  //;
-  const context = canvas.getContext("2d");
-
-  canvas.width = Math.floor(viewport.width * outputScale);
-  canvas.height = Math.floor(viewport.height * outputScale);
-  canvas.style.width = Math.floor(viewport.width) + "px";
-  canvas.style.height = Math.floor(viewport.height) + "px";
-
-  const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
-
-  //
-  // Render PDF page into canvas context
-  //
-  const renderContext = {
-    canvasContext: context,
-    transform,
-    viewport,
+async function renderFileToCanvas(file, canvas) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = async () => {
+    renderImageToCanvas(img, canvas);
+    URL.revokeObjectURL(url);
   };
-  page.render(renderContext);
+  img.src = url;
+}
+
+function renderImageToCanvas(img, canvas) {
+  const context = canvas.getContext("2d");
+  const desiredOutputWidth = 3840;
+  const desiredOutputHeight = 2160;
+
+  canvas.width = desiredOutputWidth;
+  canvas.height = desiredOutputHeight;
+  canvas.style.width = desiredOutputWidth + "px";
+  canvas.style.height = desiredOutputHeight + "px";
+
+  const outputScale = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+  const scaledWidth = img.naturalWidth * outputScale;
+  const scaledHeight = img.naturalHeight * outputScale;
+  const offsetX = (canvas.width - scaledWidth) / 2;
+  const offsetY = (canvas.height - scaledHeight) / 2;
+
+  context.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
 }
 
 async function downloadPNG(canvas) {
