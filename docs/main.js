@@ -79,7 +79,7 @@ async function processFiles(files) {
       try {
         const blob = await convertSvgToPng(file);
         const baseName = file.name.replace(/\.svg$/i, '') || 'image';
-        const filename = `${String(index + 1).padStart(3, '0')}-${baseName}.png`;
+        const filename = `${baseName}.png`;
         convertedFiles.push({ filename, blob });
         converted++;
       } catch (error) {
