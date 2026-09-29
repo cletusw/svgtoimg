@@ -1,2 +1,5 @@
-# pdftoimg
-Use pdf.js to render a PDF to a PNG image right in the browser
+# svgtoimg
+
+Rasterize SVGs to PNGs right in the browser using canvas
+
+https://cletusw.github.io/svgtoimg/
